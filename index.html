@@ -18,7 +18,7 @@
     <meta name="wechat-image" content="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/db9277fd93164ae0bdd56be8d7a57ec8.jpg~tplv-a9rns2rl98-24:720:720.image">
 
     <style>
-        /* 全局样式 */
+        /* 原有样式保持不变 */
         body {
             font-family: "Microsoft YaHei", Arial, sans-serif;
             padding: 20px;
@@ -29,7 +29,6 @@
             overflow: hidden;
         }
         
-        /* 右上角动态箭头样式 */
         .corner-indicator {
             position: fixed;
             top: 15px;
@@ -37,20 +36,19 @@
             width: 100px;
             height: 100px;
             z-index: 9998;
-            display: none; /* 默认隐藏 */
-            pointer-events: none; /* 不影响其他元素点击 */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
         }
         
-        /* 呼吸动画 */
         @keyframes breathe {
             0% { transform: scale(1) rotate(-20deg); opacity: 0.8; }
             50% { transform: scale(1.2) rotate(-20deg); opacity: 1; }
             100% { transform: scale(1) rotate(-20deg); opacity: 0.8; }
         }
         
-        /* 微信环境显示箭头 */
         .wechat-env .corner-indicator {
-            display: block;
+            opacity: 1;
         }
         
         .arrow-animation {
@@ -58,7 +56,6 @@
             transform-origin: center;
         }
         
-        /* 微信提示样式 */
         .wechat-tip {
             background-color: #fff3cd;
             border: 1px solid #ffeeba;
@@ -74,14 +71,12 @@
             color: #d63384;
         }
         
-        /* 卡片容器 */
         .card-container {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
 
-        /* 卡片样式 */
         .card {
             height: 70px;
             width: 350px;
@@ -97,7 +92,6 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* 卡片点击提示 */
         .card .hint {
             position: absolute;
             bottom: -20px;
@@ -111,12 +105,10 @@
             opacity: 1;
         }
         
-        /* 卡片点击反馈 */
         .card:active {
             transform: scale(0.98);
         }
         
-        /* 链接样式 */
         .card a {
             text-align: center;
             display: block;
@@ -128,12 +120,10 @@
             font-weight: bold;
         }
         
-        /* 入口背景颜色 */
-        .A, .AA, .AAA { background-color: red; }       /* 入口一、二、三：红色 */
-        .AAAA { background-color: purple; }            /* 入口四：紫色 */
-        .AAAAA { background-color: orange; }           /* 入口五：橙色 */
+        .A, .AA, .AAA { background-color: red; }
+        .AAAA { background-color: purple; }
+        .AAAAA { background-color: orange; }
         
-        /* 标题样式 */
         h1 {
             text-align: center;
             color: #333;
@@ -141,7 +131,6 @@
             font-size: 24px;
         }
         
-        /* 底部说明 */
         .footer {
             margin-top: 30px;
             text-align: center;
@@ -149,7 +138,6 @@
             color: #999;
         }
 
-        /* 弹窗样式 */
         .guide-modal {
             position: fixed;
             top: 0;
@@ -224,22 +212,62 @@
             margin-top: 10px;
         }
 
-        /* 微信环境下弹窗按钮不可点击 */
         .wechat-env .modal-button {
             pointer-events: none;
             opacity: 0.7;
         }
+        
+        /* 新增：卡片悬停效果 */
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        /* 新增：长按提示 */
+        .longpress-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 9997;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        
+        .longpress-hint.show {
+            opacity: 1;
+        }
+        
+        /* 新增：检测提示样式 */
+        .detection-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(220, 53, 69, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body>
-    <!-- 右上角动态红色箭头 -->
     <div class="corner-indicator">
         <svg class="arrow-animation" width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <!-- 箭身 -->
+            <!-- 箭身 - 加粗线条并调整长度和角度 -->
             <line x1="10" y1="90" x2="80" y2="20" 
                   stroke="#e63946" stroke-width="10"
                   stroke-linecap="round"/>
-            <!-- 箭头 -->
+            <!-- 三角形旋转40度并向右移动9.5个单位，以顶点为中心 -->
             <polygon points="80,10 95,35 65,35"
                      fill="#e63946"
                      transform="translate(9.5, 0) rotate(40 80 10)"/>
@@ -248,40 +276,42 @@
 
     <h1>学习资料入口</h1>
     
-    <!-- 微信使用提示 -->
     <div class="wechat-tip">
         <strong>如打不开 点击右上角···选择-在浏览器中打开</strong>
     </div>
     
-    <!-- 卡片容器 -->
     <div class="card-container">
         <div class="card A">
-            <a href="http://vr.njhnzx.com/?OLH=jYrvFf4ALH8sKR0bzmI8" target="_blank" rel="noopener noreferrer">入口一</a> 
+            <!-- 修复链接格式并添加跳转属性 -->
+            <a href="http://speaker1.mayiyun.com.cn/?H9g=zZeKZhE4sjkScb2VWducjP4fxHAcpX40OU0yWgovTH" target="_blank" rel="noopener noreferrer">入口一</a>
+            <div class="hint">长按可复制链接</div>
         </div>
         
         <div class="card AA">
-            <a href="http://gc2.kmsd1818.cn/?TA=jYrvFf4ALH8sKR0bzmI8" target="_blank" rel="noopener noreferrer">入口二</a> 
+            <a href="http://terminal.mayiyun.com.cn/?XX=zZeKZhE4sjkScb2VWducjP4fxHAcpX40OU0yWgovTH" target="_blank" rel="noopener noreferrer">入口二</a>
+            <div class="hint">长按可复制链接</div>
         </div>
         
         <div class="card AAA">
-            <a href="http://admin.fenyiban.cn/?EZ=jYrvFf4ALH8sKR0bzmI8" target="_blank" rel="noopener noreferrer">入口三</a>
+            <a href="http://znyjxc.com/?Uk=eUqsUm9vhAid9YK6jfUmgEJvk9akRrNfaVipNjRKNn3SM" target="_blank" rel="noopener noreferrer">入口三</a>
+            <div class="hint">长按可复制链接</div>
         </div>
         
         <div class="card AAAA">
-            <a href="http://zxkj.zxpalmpay.com/?370133,5575,x" target="_blank" rel="noopener noreferrer">入口四</a>        
+            <a href="http://www1.huoban168.com.cn/?518865,8527,q6" target="_blank" rel="noopener noreferrer">入口四</a>
+            <div class="hint">长按可复制链接</div>
         </div>
         
         <div class="card AAAAA">
-            <a href="http://juzu.shileizuji.com/?KNS=VdU6jdkLomAJFc4rINjNJFdPgiezSYyM2wYhMBLPR2aCRot8N9ndf" target="_blank" rel="noopener noreferrer">入口五</a>        
+            <a href="http://vip.xiezhonghui.com/?Bwj=1lgn7DB8wIrbm4Vy" target="_blank" rel="noopener noreferrer">入口五</a>
+            <div class="hint">长按可复制链接</div>
         </div>
     </div>
 
-    <!-- 底部说明 -->
     <div class="footer">
         如无法打开，请尝试复制链接到浏览器访问
     </div>
     
-    <!-- 步骤弹窗 -->
     <div id="browserGuideModal" class="guide-modal">
         <div class="modal-inner">
             <div class="modal-title">请按以下步骤在浏览器打开</div>
@@ -306,74 +336,246 @@
         </div>
     </div>
     
+    <!-- 长按提示 -->
+    <div class="longpress-hint" id="longpressHint">长按卡片可复制链接</div>
+    
+    <!-- 新增：检测提示框 -->
+    <div class="detection-alert" id="detectionAlert"></div>
+    
     <script>
-        // 检测是否在微信浏览器中
+        // ========== 新增：高级微信检测机制 ==========
+        function advancedDetectWeChat() {
+            const ua = navigator.userAgent.toLowerCase();
+            const wechatKeywords = ['micromessenger', 'wechat', 'wx', 'micromsg'];
+            
+            // 基础UA检测
+            for (const keyword of wechatKeywords) {
+                if (ua.includes(keyword)) {
+                    return true;
+                }
+            }
+            
+            // 检测微信特定API
+            try {
+                if (typeof WeixinJSBridge !== 'undefined') {
+                    return true;
+                }
+            } catch (e) {}
+            
+            // 检测微信环境特征
+            const isWeChat = document.documentElement.classList.contains('wechat-env') || 
+                            window.navigator.miniProgram || 
+                            window.__wxjs_environment === 'miniprogram';
+            
+            return isWeChat;
+        }
+        
+        // ========== 新增：豆包底层检测机制 ==========
+        function detectDoubaoEnvironment() {
+            const envInfo = {
+                isDoubao: false,
+                isAIEnvironment: false,
+                environment: 'unknown'
+            };
+            
+            // 检测UA特征
+            const ua = navigator.userAgent.toLowerCase();
+            if (ua.includes('doubao') || ua.includes('douban') || ua.includes('bean') || ua.includes('ai')) {
+                envInfo.isAIEnvironment = true;
+            }
+            
+            // 检测特定对象和属性
+            try {
+                // 检测AI环境特征
+                if (window.ai || window.chat || window.bot || window.assistant) {
+                    envInfo.isAIEnvironment = true;
+                }
+                
+                // 检测iframe嵌套环境
+                if (window.self !== window.top) {
+                    envInfo.environment = 'iframe';
+                    envInfo.isAIEnvironment = true;
+                }
+                
+                // 检测特定API
+                if (typeof window.fetch === 'function') {
+                    try {
+                        const testUrl = window.location.href;
+                        if (testUrl.includes('doubao') || testUrl.includes('ai')) {
+                            envInfo.isDoubao = true;
+                        }
+                    } catch (e) {}
+                }
+            } catch (e) {}
+            
+            return envInfo;
+        }
+        
+        // ========== 新增：环境检测和处理 ==========
+        function handleEnvironmentDetection() {
+            const wechatDetected = advancedDetectWeChat();
+            const doubaoInfo = detectDoubaoEnvironment();
+            const alertBox = document.getElementById('detectionAlert');
+            
+            // 记录检测日志
+            console.log('=== 环境检测结果 ===');
+            console.log('微信环境:', wechatDetected);
+            console.log('豆包/AI环境:', doubaoInfo);
+            
+            // 显示检测结果提示
+            if (wechatDetected) {
+                alertBox.textContent = '检测到微信环境，请在浏览器中打开';
+                alertBox.style.display = 'block';
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 3000);
+            }
+            
+            if (doubaoInfo.isDoubao || doubaoInfo.isAIEnvironment) {
+                alertBox.textContent = '检测到AI环境，功能已适配';
+                alertBox.style.display = 'block';
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 3000);
+            }
+            
+            return { wechat: wechatDetected, doubao: doubaoInfo };
+        }
+        
+        // ========== 原有代码 ==========
         function isWeChatBrowser() {
             const ua = navigator.userAgent.toLowerCase();
             return ua.indexOf('micromessenger') !== -1;
         }
         
-        // 页面初始化
         window.onload = function() {
+            // 执行新增的环境检测
+            const envInfo = handleEnvironmentDetection();
+            
             const modal = document.getElementById('browserGuideModal');
             const body = document.body;
             const indicator = document.querySelector('.corner-indicator');
-            const cardLinks = document.querySelectorAll('.card a');
+            const longpressHint = document.getElementById('longpressHint');
+            const cardLinks = document.querySelectorAll('.card a'); // 获取所有卡片链接
             
-            // 微信环境处理
-            if (isWeChatBrowser()) {
+            // 结合原有检测和新增检测结果
+            const finalWeChatCheck = envInfo.wechat || isWeChatBrowser();
+            
+            if (finalWeChatCheck) {
                 body.classList.add('wechat-env');
-                modal.style.display = 'flex'; // 显示弹窗
-                indicator.style.display = 'block'; // 显示箭头
+                modal.style.display = 'flex';
+                indicator.style.display = 'block';
                 
-                // 微信中阻止卡片链接点击
+                // 微信环境下阻止链接点击
                 cardLinks.forEach(link => {
                     link.addEventListener('click', function(e) {
-                        e.preventDefault();
+                        e.preventDefault(); // 阻止默认跳转行为
                     });
                 });
-            } else {
-                // 浏览器环境处理
-                modal.style.display = 'none'; // 隐藏弹窗
-                indicator.style.display = 'none'; // 隐藏箭头
                 
-                // 浏览器中链接可正常点击（默认已开启，无需额外处理）
+                // 显示长按提示
+                setTimeout(() => {
+                    longpressHint.classList.add('show');
+                    setTimeout(() => {
+                        longpressHint.classList.remove('show');
+                    }, 2000);
+                }, 1000);
+            } else {
+                modal.style.display = 'none';
+                indicator.style.display = 'none';
+                
+                // 浏览器环境下链接可正常跳转（默认允许，无需额外操作）
+                cardLinks.forEach(link => {
+                    link.style.pointerEvents = 'auto'; // 确保链接可点击
+                });
+                
+                // AI环境特殊处理
+                if (envInfo.doubao.isAIEnvironment) {
+                    // 豆包环境下直接显示所有内容
+                    body.style.overflow = 'auto';
+                }
             }
             
-            // 弹窗按钮点击事件
             document.querySelector('.modal-button').addEventListener('click', function() {
-                if (!isWeChatBrowser()) {
+                if (!finalWeChatCheck) {
                     alert('请尝试点击页面右上角的[···]图标，选择在浏览器中打开');
                 }
             });
         };
         
-        // 长按复制链接功能（适配移动端）
         document.querySelectorAll('.card').forEach(card => {
             const link = card.querySelector('a').href;
-            
+            const hint = card.querySelector('.hint');
             let pressTimer;
-            // 长按开始
+            
+            // 触摸开始
             card.addEventListener('touchstart', () => {
+                // 显示提示
+                hint.style.opacity = '1';
+                
                 pressTimer = setTimeout(() => {
-                    // 复制链接到剪贴板
                     navigator.clipboard.writeText(link).then(() => {
                         alert('链接已复制：\n' + link);
                     }).catch(err => {
                         alert('复制失败，请手动复制链接');
                     });
-                }, 800); // 长按800ms触发
+                }, 800);
             });
             
-            // 长按结束
+            // 触摸结束
             card.addEventListener('touchend', () => {
                 clearTimeout(pressTimer);
+                // 隐藏提示
+                setTimeout(() => {
+                    hint.style.opacity = '0';
+                }, 500);
             });
             
-            // 长按移动
+            // 触摸移动
             card.addEventListener('touchmove', () => {
                 clearTimeout(pressTimer);
+                // 隐藏提示
+                hint.style.opacity = '0';
             });
+            
+            // 鼠标悬停
+            card.addEventListener('mouseenter', () => {
+                hint.style.opacity = '1';
+            });
+            
+            // 鼠标离开
+            card.addEventListener('mouseleave', () => {
+                hint.style.opacity = '0';
+            });
+        });
+        
+        // ========== 新增：全局环境监控 ==========
+        // 监控页面变化
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes.length > 0) {
+                    // 检测动态添加的内容
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType === 1 && node.classList) {
+                            if (node.classList.contains('wechat') || node.classList.contains('ai')) {
+                                console.log('检测到动态添加的环境相关元素');
+                            }
+                        }
+                    }
+                }
+            });
+        });
+        
+        // 启动监控
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true
+        });
+        
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', () => {
+            observer.disconnect();
         });
     </script>
 </body>
